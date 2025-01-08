@@ -20,7 +20,7 @@ source ~/.bashrc
 cd autoscaling-korea
 python3 -m venv venv
 source venv/bin/activate
-echo "source ~/autoscaling-korea/venv/bin/activate" >> ~/.bashrc
+echo "source /autoscaling-korea/venv/bin/activate" >> ~/.bashrc
 
 cd oneinstance
 pip3 install -e .
