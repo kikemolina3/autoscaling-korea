@@ -9,7 +9,7 @@ apt-get install git -y
 apt-get install cargo -y
 
 # Clone the repository
-git clone "https://kikemolina3:<GH_TOKEN>@github.com/kikemolina3/autoscaling-korea.git"
+git clone https://kikemolina3:[GH_TOKEN]@github.com/kikemolina3/autoscaling-korea.git
 
 # Add the cargo bin directory to the PATH
 echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
@@ -31,5 +31,4 @@ cd ../..
 # Run the application
 python3 app.py &
 
-python3 main.py --program "compilation" --duration 30 >> ~/compilation.log
-python3 main.py --program "encoding" --duration 30 >> ~/encoding.log
+python3 main.py --program [PROGRAM] --duration [DURATION] >> ~/output.log

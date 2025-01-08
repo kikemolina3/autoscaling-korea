@@ -4,16 +4,19 @@ import boto3
 import os
 import requests
 import base64
+import argparse
 
 RAM = 8
 VCPU = 4
 
 
-def create_launch_template():
+def create_launch_template(program, duration):
     ec2 = boto3.client('ec2')
 
     with open('userdata.sh', 'r') as file:
-        user_data = file.read().replace('<GH_TOKEN>', os.environ['GH_TOKEN'])
+        user_data = file.read().replace('[GH_TOKEN]', os.environ['GH_TOKEN'])
+        user_data = user_data.replace('[PROGRAM]', program)
+        user_data = user_data.replace('[DURATION]', str(duration))
 
     user_data_base64 = base64.b64encode(user_data.encode('utf-8')).decode('utf-8')
 
@@ -124,6 +127,17 @@ def launch_kmu_instance():
 
 
 if __name__ == '__main__':
-    create_launch_template()
-    launch_aws_instance()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--program', type=str, help='The program to execute', required=True)
+    parser.add_argument('--duration', type=int, help='The duration of the test', default=60)
+    parser.add_argument('--kmu', action='store_true', help='Use KMU oracle')
 
+    args = parser.parse_args()
+
+    assert args.program in ["compilation", "encoding"]
+
+    create_launch_template(args.program, args.duration)
+    if args.kmu:
+        launch_kmu_instance()
+    else:
+        launch_aws_instance()
