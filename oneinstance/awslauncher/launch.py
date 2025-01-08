@@ -3,6 +3,7 @@
 import boto3
 import os
 import requests
+import base64
 
 RAM = 8
 VCPU = 4
@@ -10,15 +11,25 @@ VCPU = 4
 
 def create_launch_template():
     ec2 = boto3.client('ec2')
-    response = ec2.create_launch_template(
-        LaunchTemplateName='autoscaling-korea-oneinstance',
-        VersionDescription='Version 1',
-        LaunchTemplateData={
-            'ImageId': 'ami-0e2c8caa4b6378d8c',
-            'KeyName': 'autoscaling-korea',
-            'UserData': open('userdata.sh').read().replace('<GH_TOKEN>', os.environ['GH_TOKEN']),
-        }
-    )
+
+    with open('userdata.sh', 'r') as file:
+        user_data = file.read().replace('<GH_TOKEN>', os.environ['GH_TOKEN'])
+
+    user_data_base64 = base64.b64encode(user_data.encode('utf-8')).decode('utf-8')
+
+    try:
+        response = ec2.create_launch_template(
+            LaunchTemplateName='autoscaling-korea-oneinstance',
+            VersionDescription='Version 1',
+            LaunchTemplateData={
+                'ImageId': 'ami-0e2c8caa4b6378d8c',
+                'KeyName': 'autoscaling-korea',
+                'UserData': user_data_base64,
+            }
+        )
+    except ec2.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == 'InvalidLaunchTemplateName.AlreadyExistsException':
+            return 'autoscaling-korea-oneinstance'
 
     return response['LaunchTemplate']['LaunchTemplateName']
 
@@ -54,7 +65,8 @@ def launch_aws_instance():
         TargetCapacitySpecification={
             'TotalTargetCapacity': 1,
             'OnDemandTargetCapacity': 0,
-            'SpotTargetCapacity': 1
+            'SpotTargetCapacity': 1,
+            'DefaultTargetCapacityType': 'spot'
         },
         Type='instant',
     )
@@ -99,7 +111,8 @@ def launch_kmu_instance():
         TargetCapacitySpecification={
             'TotalTargetCapacity': 1,
             'OnDemandTargetCapacity': 0,
-            'SpotTargetCapacity': 1
+            'SpotTargetCapacity': 1,
+            'DefaultTargetCapacityType': 'spot'
         },
         Type='instant',
     )
