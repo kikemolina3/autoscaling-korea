@@ -28,12 +28,7 @@ cargo fetch
 cd ../..
 
 # Run the application
-cd compilation
 python3 app.py &
-cd ..
-cd encoding
-python3 app.py &
-cd ..
 
 python3 main.py --program "compilation" --duration 30
 python3 main.py --program "encoding" --duration 30
