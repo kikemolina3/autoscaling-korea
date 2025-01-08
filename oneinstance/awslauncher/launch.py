@@ -17,20 +17,25 @@ def create_launch_template():
 
     user_data_base64 = base64.b64encode(user_data.encode('utf-8')).decode('utf-8')
 
+    def create_lt():
+        return ec2.create_launch_template(
+                LaunchTemplateName='autoscaling-korea-oneinstance',
+                VersionDescription='Version 1',
+                LaunchTemplateData={
+                    'ImageId': 'ami-0e2c8caa4b6378d8c',
+                    'KeyName': 'autoscaling-korea',
+                    'UserData': user_data_base64,
+                }
+            )
+
     try:
-        response = ec2.create_launch_template(
-            LaunchTemplateName='autoscaling-korea-oneinstance',
-            VersionDescription='Version 1',
-            LaunchTemplateData={
-                'ImageId': 'ami-0e2c8caa4b6378d8c',
-                'KeyName': 'autoscaling-korea',
-                'UserData': user_data_base64,
-            }
-        )
+        response = create_lt()
     except ec2.exceptions.ClientError as e:
         if e.response['Error']['Code'] == 'InvalidLaunchTemplateName.AlreadyExistsException':
-            return 'autoscaling-korea-oneinstance'
-
+            # Delete and recreate
+            ec2.delete_launch_template(LaunchTemplateName='autoscaling-korea-oneinstance')
+            response = create_lt()
+            
     return response['LaunchTemplate']['LaunchTemplateName']
 
 
