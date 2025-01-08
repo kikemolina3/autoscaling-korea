@@ -18,12 +18,14 @@ cd autoscaling-korea
 python3 -m venv venv
 source venv/bin/activate
 echo "source venv/bin/activate" >> ~/.bashrc
+
+cd oneinstance
 pip3 install -e .
 
 # Install dependencies
-cd oneinstance/compilation
+cd compilation/web
 cargo fetch
-cd ..
+cd ../..
 
 # Run the application
 cd compilation
