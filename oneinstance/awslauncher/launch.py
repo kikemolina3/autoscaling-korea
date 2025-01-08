@@ -8,6 +8,7 @@ import argparse
 
 RAM = 8
 VCPU = 4
+BUCKET = 'korea-oneinstance'
 
 
 def create_launch_template(program, duration):
@@ -17,6 +18,7 @@ def create_launch_template(program, duration):
         user_data = file.read().replace('[GH_TOKEN]', os.environ['GH_TOKEN'])
         user_data = user_data.replace('[PROGRAM]', program)
         user_data = user_data.replace('[DURATION]', str(duration))
+        user_data = user_data.replace('[BUCKET]', BUCKET)
 
     user_data_base64 = base64.b64encode(user_data.encode('utf-8')).decode('utf-8')
 
@@ -28,7 +30,11 @@ def create_launch_template(program, duration):
                     'ImageId': 'ami-0e2c8caa4b6378d8c',
                     'KeyName': 'autoscaling-korea',
                     'UserData': user_data_base64,
-                }
+                },
+                IamInstanceProfile={
+                    # TODO: unharcode and manage via code
+                    'Name': 'lithops-iam-instance-profile'
+                },
             )
 
     try:
@@ -141,3 +147,6 @@ if __name__ == '__main__':
         launch_kmu_instance()
     else:
         launch_aws_instance()
+
+    
+    
