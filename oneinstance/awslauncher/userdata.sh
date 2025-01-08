@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -x
+
 sudo apt-get update -y && sudo apt-get install -y python3-pip python3-venv
 sudo apt-get update -y && sudo apt-get install -y ffmpeg
 sudo apt-get install git -y
@@ -17,7 +20,7 @@ source ~/.bashrc
 cd autoscaling-korea
 python3 -m venv venv
 source venv/bin/activate
-echo "source venv/bin/activate" >> ~/.bashrc
+echo "source ~/autoscaling-korea/venv/bin/activate" >> ~/.bashrc
 
 cd oneinstance
 pip3 install -e .
