@@ -1,0 +1,44 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Cargo
+Cargo.lock
+.cargo/
+.cargo_vcs_info.json
+
+# Rust tools
+rust-toolchain
+rust-toolchain.toml
+rustfmt.toml
+.clippy.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+
+# Distribution / Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+*.so
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
