@@ -1,5 +1,6 @@
 #!/bin/python
 
+from datetime import datetime
 import boto3
 import os
 import requests
@@ -11,7 +12,7 @@ VCPU = 4
 BUCKET = 'korea-oneinstance'
 
 
-def create_launch_template(program, duration):
+def create_launch_template(date, program, duration):
     ec2 = boto3.client('ec2')
 
     with open('userdata.sh', 'r') as file:
@@ -19,6 +20,7 @@ def create_launch_template(program, duration):
         user_data = user_data.replace('[PROGRAM]', program)
         user_data = user_data.replace('[DURATION]', str(duration))
         user_data = user_data.replace('[BUCKET]', BUCKET)
+        user_data = user_data.replace('[DATE]', date)
 
     user_data_base64 = base64.b64encode(
         user_data.encode('utf-8')).decode('utf-8')
@@ -137,6 +139,7 @@ def launch_kmu_instance(policy='PPF'):
     print("*** KMU oracle response ***")
     print(response_json)
 
+    return response_json
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -146,13 +149,15 @@ if __name__ == '__main__':
                         help='The duration of the test', default=60)
     parser.add_argument('--ppcp', action='store_true',
                         help='Use ppcp oracle; otherwise use ppf')
+    
+    date = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
     args = parser.parse_args()
 
     assert args.program in ["compilation", "encoding"]
 
-    create_launch_template(args.program, args.duration)
-    if args.ppcp:
-        launch_kmu_instance(policy='PPCP')
-    else:
-        launch_kmu_instance(policy='PPF')
+    create_launch_template(date, args.program, args.duration)
+    oracle_response = launch_kmu_instance(policy='PPCP') if args.ppcp else launch_kmu_instance(policy='PPF')
+
+    s3 = boto3.client('s3')
+    s3.put_object(Bucket=BUCKET, Key=f'{args.program}/{date}/oracle-response.json', Body=str(oracle_response))

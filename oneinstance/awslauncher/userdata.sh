@@ -39,5 +39,4 @@ python3 app.py &
 python3 main.py --program [PROGRAM] --duration [DURATION] >> ~/output.log
 
 # Store the output in S3
-DATE=$(date '+%Y-%m-%d-%H-%M-%S')
-aws s3 cp ~/output.log s3://[BUCKET]/[PROGRAM]-$DATE.log
+aws s3 cp ~/output.log s3://[BUCKET]/[PROGRAM]/[DATE]/execution-results.log
