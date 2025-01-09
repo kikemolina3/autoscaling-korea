@@ -40,3 +40,8 @@ python3 main.py --program [PROGRAM] --duration [DURATION] >> ~/output.log
 
 # Store the output in S3
 aws s3 cp ~/output.log s3://[BUCKET]/[PROGRAM]/[DATE]/execution-results.log
+
+# Terminate the instance itself
+token=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/instance-id)
+aws ec2 terminate-instances --instance-ids $instance_id

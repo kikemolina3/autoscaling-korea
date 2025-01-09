@@ -10,7 +10,6 @@ def monitor_cpu(interval=1, duration=60, action=""):
     last_time = time.time()
     while time.time() < end_time:
         cpu_usage = psutil.cpu_percent(interval=interval)
-        print(f"CPU Usage: {cpu_usage}%", end="\r")
         if cpu_usage < 50 and last_time + 2 < time.time():
             requests.get("http://localhost:5000/" + action)
             counter += 1
