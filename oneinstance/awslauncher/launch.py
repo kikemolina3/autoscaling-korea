@@ -20,31 +20,33 @@ def create_launch_template(program, duration):
         user_data = user_data.replace('[DURATION]', str(duration))
         user_data = user_data.replace('[BUCKET]', BUCKET)
 
-    user_data_base64 = base64.b64encode(user_data.encode('utf-8')).decode('utf-8')
+    user_data_base64 = base64.b64encode(
+        user_data.encode('utf-8')).decode('utf-8')
 
     def create_lt():
         return ec2.create_launch_template(
-                LaunchTemplateName='autoscaling-korea-oneinstance',
-                VersionDescription='Version 1',
-                LaunchTemplateData={
-                    'ImageId': 'ami-0e2c8caa4b6378d8c',
-                    'KeyName': 'autoscaling-korea',
-                    'UserData': user_data_base64,
-                },
-                IamInstanceProfile={
+            LaunchTemplateName='autoscaling-korea-oneinstance',
+            VersionDescription='Version 1',
+            LaunchTemplateData={
+                'ImageId': 'ami-0e2c8caa4b6378d8c',
+                'KeyName': 'autoscaling-korea',
+                'UserData': user_data_base64,
+                'IamInstanceProfile': {
                     # TODO: unharcode and manage via code
                     'Name': 'lithops-iam-instance-profile'
                 },
-            )
+            },
+        )
 
     try:
         response = create_lt()
     except ec2.exceptions.ClientError as e:
         if e.response['Error']['Code'] == 'InvalidLaunchTemplateName.AlreadyExistsException':
             # Delete and recreate
-            ec2.delete_launch_template(LaunchTemplateName='autoscaling-korea-oneinstance')
+            ec2.delete_launch_template(
+                LaunchTemplateName='autoscaling-korea-oneinstance')
             response = create_lt()
-            
+
     return response['LaunchTemplate']['LaunchTemplateName']
 
 
@@ -61,19 +63,19 @@ def launch_aws_instance():
                     'Version': '1'
                 },
                 "Overrides": [
-                        {
-                            "InstanceRequirements": {
-                                "VCpuCount": {
-                                    "Min": VCPU,
-                                    "Max": VCPU,
-                                },     
-                                "MemoryMiB": {
-                                    "Min": RAM * 1024,
-                                    "Max": RAM * 1024,
-                                },
-                            }
+                    {
+                        "InstanceRequirements": {
+                            "VCpuCount": {
+                                "Min": VCPU,
+                                "Max": VCPU,
+                            },
+                            "MemoryMiB": {
+                                "Min": RAM * 1024,
+                                "Max": RAM * 1024,
+                            },
                         }
-                    ],
+                    }
+                ],
             }
         ],
         TargetCapacitySpecification={
@@ -86,10 +88,10 @@ def launch_aws_instance():
     )
 
 
-def launch_kmu_instance():
+def launch_kmu_instance(policy='PPF'):
     ec2 = boto3.client('ec2')
     kmu_endpoint = "https://1od368a36h.execute-api.us-west-2.amazonaws.com/default/optimal_combination?"
-    kmu_endpoint += f"InstanceTypes=%5B'c5','c6i','c7i'%5D&Regions=%5B'us-east-1'%5D&SelectBy=PPCP&FunctionNum=1&MemPerFunction={RAM}"
+    kmu_endpoint += f"InstanceTypes=%5B'c5','c6i','c7i'%5D&Regions=%5B'us-east-1'%5D&SelectBy={policy}&FunctionNum=1&MemPerFunction={RAM}"
 
     response = requests.get(kmu_endpoint)
     response_json = response.json()
@@ -100,7 +102,8 @@ def launch_kmu_instance():
         zone_to_az[az['ZoneId']] = az['ZoneName']
 
     instance_type = list(response_json[0].keys())[0]
-    instance_type = instance_type.replace("'", "").replace("(", "").replace(")", "")
+    instance_type = instance_type.replace(
+        "'", "").replace("(", "").replace(")", "")
     instance_type, zone = instance_type.split(",")
     instance_type = instance_type.strip()
     zone = zone.strip()
@@ -131,22 +134,25 @@ def launch_kmu_instance():
         Type='instant',
     )
 
+    print("*** KMU oracle response ***")
+    print(response_json)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--program', type=str, help='The program to execute', required=True)
-    parser.add_argument('--duration', type=int, help='The duration of the test', default=60)
-    parser.add_argument('--kmu', action='store_true', help='Use KMU oracle')
+    parser.add_argument('--program', type=str,
+                        help='The program to execute', required=True)
+    parser.add_argument('--duration', type=int,
+                        help='The duration of the test', default=60)
+    parser.add_argument('--ppcp', action='store_true',
+                        help='Use ppcp oracle; otherwise use ppf')
 
     args = parser.parse_args()
 
     assert args.program in ["compilation", "encoding"]
 
     create_launch_template(args.program, args.duration)
-    if args.kmu:
-        launch_kmu_instance()
+    if args.ppcp:
+        launch_kmu_instance(policy='PPCP')
     else:
-        launch_aws_instance()
-
-    
-    
+        launch_kmu_instance(policy='PPF')

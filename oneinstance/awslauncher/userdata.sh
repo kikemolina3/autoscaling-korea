@@ -7,6 +7,11 @@ apt-get update -y && apt-get install -y python3-pip python3-venv
 apt-get update -y && apt-get install -y ffmpeg
 apt-get install git -y
 apt-get install cargo -y
+apt-get install unzip -y
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
 
 # Clone the repository
 git clone https://kikemolina3:[GH_TOKEN]@github.com/kikemolina3/autoscaling-korea.git
