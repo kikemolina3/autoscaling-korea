@@ -1,6 +1,7 @@
 #!/bin/python
 
 from datetime import datetime
+import time
 import boto3
 import os
 import requests
@@ -161,3 +162,6 @@ if __name__ == '__main__':
 
     s3 = boto3.client('s3')
     s3.put_object(Bucket=BUCKET, Key=f'{args.program}/{date}/oracle-response.json', Body=str(oracle_response))
+
+    # Avoid executing the same program in the same second
+    time.sleep(2)
